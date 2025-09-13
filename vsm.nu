@@ -1,7 +1,9 @@
 #!/usr/bin/env nu
 
-export def "vsm list" [] {
-	let enabled = vsm list enabled
+export def "vsm list" [
+	--colorless (-c) # Prints the status without ANSI colors
+] {
+	let enabled = vsm list enabled --colorless=$colorless
 	let enabled_names = $enabled | each { $in.name }
 
 	let installed = vsm list installed | where { $enabled_names not-has $in.name }
@@ -10,7 +12,9 @@ export def "vsm list" [] {
 }
 
 # Lists services that are enabled (this is distinct from 'up')
-export def "vsm list enabled" [] {
+export def "vsm list enabled" [
+	--colorless (-c) # Prints the status without ANSI colors
+] {
 	sudo sv status /var/service/*
 	| parse '{status}: {path}: {unparsed}'
 	| each {|x| match $x.status {
@@ -38,6 +42,7 @@ export def "vsm list enabled" [] {
 			},
 		}
 	}
+	| if $colorless { $in | update status { ansi strip } } else $in
 }
 
 # Lists all installed services
