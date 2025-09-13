@@ -21,3 +21,15 @@ export def "vsm list" [] {
 
 	print ($enabled | join -o $installed name | upsert status {|x| if $x.status == null { 'installed' } else { $x.status } })
 }
+
+export def "vsm enable" [name: string] {
+	let $target = '/etc/sv/' | path join $name
+	if not ($target | path exists) { error make { msg: $"Can't find installed service with name ($name)" } }
+	sudo ln -s $target /var/service/
+}
+
+export def "vsm disable" [name: string] {
+	let $target = '/var/service/' | path join $name
+	if not ($target | path exists) { error make { msg: $"Can't find enabled service with name ($name)" } }
+	sudo rm $target
+}
