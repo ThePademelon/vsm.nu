@@ -1,8 +1,7 @@
 #!/usr/bin/env nu
 
 export def "vsm list" [] {
-	# TODO: Join with below list
-	let installed = ls /etc/sv/
+	let installed = ls /etc/sv/ | each {|x| { name:($x.name | path basename) } }
 
 	let enabled = sudo sv status /var/service/*
 	| parse '{status}: {path}: {details}'
@@ -20,5 +19,5 @@ export def "vsm list" [] {
 	| reject details
 	| reject path
 
-	print $enabled
+	print ($enabled | join -o $installed name | upsert status {|x| if $x.status == null { 'installed' } else { $x.status } })
 }
