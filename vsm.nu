@@ -23,12 +23,15 @@ export def "vsm list" [] {
 }
 
 export def "vsm enable" [name: string] {
+	if ($name | str trim | is-empty) { error make { msg: 'Name was empty' } }
 	let $target = '/etc/sv/' | path join $name
 	if not ($target | path exists) { error make { msg: $"Can't find installed service with name ($name)" } }
+	if ('/var/service/' | path join $name | path exists) { error make { msg: "Service is already enabled" } }
 	sudo ln -s $target /var/service/
 }
 
 export def "vsm disable" [name: string] {
+	if ($name | str trim | is-empty) { error make { msg: 'Name was empty' } }
 	let $target = '/var/service/' | path join $name
 	if not ($target | path exists) { error make { msg: $"Can't find enabled service with name ($name)" } }
 	sudo rm $target
