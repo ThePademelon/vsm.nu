@@ -8,6 +8,10 @@ Run `vsm list` to fetch the full list of services (inlcuding services you haven'
 
 <img width="789" height="392" alt="image" src="https://github.com/user-attachments/assets/ad6f0ab6-cbd8-47a6-935e-142c932864c3" />
 
+Run `vsm enable <name>` to enable an installed service.
+
+Run `vsm disable <name>` to disable an enabled service.
+
 ## Quickstart
 ```nushell
 git clone https://github.com/ThePademelon/vsm.nu; cd vsm.nu
