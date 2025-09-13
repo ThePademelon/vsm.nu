@@ -1,27 +1,55 @@
 #!/usr/bin/env nu
 
 export def "vsm list" [] {
-	let installed = ls /etc/sv/ | each {|x| { name:($x.name | path basename) } }
+	let enabled = vsm list enabled
+	let enabled_names = $enabled | each { $in.name }
 
-	let enabled = sudo sv status /var/service/*
-	| parse '{status}: {path}: {details}'
-	| upsert name {|s| $s.path | path basename }
-	| upsert pid {|s| if $s.status == 'run' { $s.details | parse '(pid {pid}){rest}' | first | get pid } }
-	| upsert uptime {|s| if $s.status == 'run' { ($s.details | parse '(pid {pid}) {uptime}s{rest}' | first | get uptime) + 's' } }
-	| upsert error {|s| if $s.status == 'fail' { $'(ansi red)($s.details)(ansi reset)' } }
-	| upsert status {|s| match $s.status {
-		'run' => $'(ansi green)running(ansi reset)',
-		'fail' => $'(ansi red)fail(ansi reset)',
-		'down' => $'(ansi blue)down(ansi reset)',
-		_ => $s.status
-		}
-	}
-	| reject details
-	| reject path
+	let installed = vsm list installed | where { $enabled_names not-has $in.name }
 
-	print ($enabled | join -o $installed name | upsert status {|x| if $x.status == null { 'installed' } else { $x.status } })
+	$enabled | append $installed
 }
 
+# Lists services that are enabled (this is distinct from 'up')
+export def "vsm list enabled" [] {
+	sudo sv status /var/service/*
+	| parse '{status}: {path}: {unparsed}'
+	| each {|x| match $x.status {
+			'run' => {
+				let run_parse = $x.unparsed | parse '(pid {pid}) {uptime}s{rest}' | first;
+				{
+					status: ($'(ansi green)running(ansi reset)'),
+					name: ($x.path | path basename),
+					pid: $run_parse.pid,
+					uptime: ($run_parse.uptime + "sec" | into duration)
+				}
+			},
+			'fail' => {
+				{
+					status: ($'(ansi red)fail(ansi reset)'),
+					name: ($x.path | path basename),
+					error: ($'(ansi red)($x.unparsed)(ansi reset)')
+				}
+			},
+			'down' => {
+				{
+					status: ($'(ansi blue)down(ansi reset)'),
+					name: ($x.path | path basename),
+				}
+			},
+		}
+	}
+}
+
+# Lists all installed services
+export def "vsm list installed" [] {
+	ls /etc/sv/ | each {|x| {
+			status:'installed'
+			name:($x.name | path basename)
+		}
+	}
+}
+
+# Enables a service by name
 export def "vsm enable" [name: string] {
 	if ($name | str trim | is-empty) { error make { msg: 'Name was empty' } }
 	let $target = '/etc/sv/' | path join $name
@@ -30,6 +58,7 @@ export def "vsm enable" [name: string] {
 	sudo ln -s $target /var/service/
 }
 
+# Disables a service by name
 export def "vsm disable" [name: string] {
 	if ($name | str trim | is-empty) { error make { msg: 'Name was empty' } }
 	let $target = '/var/service/' | path join $name
