@@ -8,9 +8,9 @@ Run `vsm list` to fetch the full list of services (inlcuding services you haven'
 
 <img width="789" height="392" alt="image" src="https://github.com/user-attachments/assets/ad6f0ab6-cbd8-47a6-935e-142c932864c3" />
 
-Run `vsm enable <name>` to enable an installed service.
+Run `vsm enable <name>` to [enable](https://docs.voidlinux.org/config/services/index.html#enabling-services) an installed service.
 
-Run `vsm disable <name>` to disable an enabled service.
+Run `vsm disable <name>` to [disable](https://docs.voidlinux.org/config/services/index.html#disabling-services) an enabled service (not to be confused with 'down').
 
 ## Quickstart
 ```nushell
