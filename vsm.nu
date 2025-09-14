@@ -67,6 +67,6 @@ export def "vsm enable" [name: string] {
 export def "vsm disable" [name: string] {
 	if ($name | str trim | is-empty) { error make { msg: 'Name was empty' } }
 	let $target = '/var/service/' | path join $name
-	if not ($target | path exists) { error make { msg: $"Can't find enabled service with name ($name)" } }
+	if not ($target | path exists -n) { error make { msg: $"Can't find enabled service with name ($name)" } }
 	sudo rm $target
 }
